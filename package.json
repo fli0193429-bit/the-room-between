@@ -1,0 +1,1 @@
+{"name":"room-between","private":true,"type":"module","scripts":{"build":"esbuild src/firebase.js --bundle --format=esm --outfile=dist/firebase.js","test":"node --test tests/game.test.js"},"dependencies":{"firebase":"13.3.0"},"devDependencies":{"esbuild":"0.27.3"}}
