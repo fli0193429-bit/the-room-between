@@ -1,27 +1,59 @@
 # The Room Between / 房间之外
-Firebase #BuildHybridAI 2026 work in progress. A peaceful room puzzle with deterministic, solvable mechanics and optional Firebase-generated object narratives.
 
-## Current status
-Playable handcrafted prototype, NOT a completed contest submission. Firebase SDK integration builds but live model inference and App Check have not yet been tested with an authorized project. No project credentials included. AI setup is explicitly optional; handwritten content is never labeled AI output.
+A peaceful room puzzle in which three everyday objects become a personal story. Built during Firebase #BuildHybridAI 2026 with JavaScript, SVG, a deterministic puzzle engine and Firebase AI Logic.
 
-## Run
-`npm install`, `npm run build`, serve `dist/` on localhost or HTTPS. `npm test` verifies progression, wrong answers, prerequisite gating and save recovery.
+## What works
 
-## Firebase setup
-Create or select an authorized Firebase project on the free Spark plan, enable AI Logic with Gemini Developer API, register web app, configure production App Check reCAPTCHA v3 and allowed domain. Enter the public web configuration and public App Check site key in AI settings. Do not enter Gemini secret keys, service account credentials or App Check debug tokens. Config is held only in memory. Refresh to clear/reconfigure. Default inference is ONLY_ON_DEVICE; cloud fallback is a separate explicit user choice. Model download can take several minutes and requires a supported Chrome desktop/device. No software flags or billing are changed automatically.
+- Explore a moonlit study, redirect light with a mirror, open a coded drawer, and find the garden.
+- Supply three object names; Firebase generates constrained JSON containing a personal introduction, object descriptions and an ending.
+- The game engine owns inventory, prerequisites and solutions. Model output cannot unlock the door or change the puzzle graph.
+- English and Chinese UI, keyboard-accessible controls, hints, local progress persistence and a service worker for offline replay after initial loading.
+- Every AI inference call goes through Firebase AI Logic. No direct Gemini or Chrome Prompt API calls.
 
-All inference calls are through Firebase AI Logic. `src/firebase.js` initializes App Check, creates a hybrid model with constrained JSON output, initializes the on-device model on a user gesture, calls generateContent and displays the actual inferenceSource. Raw room photos are not collected. Only three user-selected object labels are passed to the model. The core puzzle remains deterministic and cached for offline play.
+## Verified status — November 12, 2026
 
-## Verification still required before submission
-1. Finish Devpost registration; verify Google developer account answer.
-2. Configure and test a real Firebase project, App Check, local inference and fallback independently.
-3. Capture accurate 3-minute English demo with both verified inference modes; do not present handwritten demo as model output.
-4. Publish a public source repository, provide test access, and finalize Devpost submission before Nov 30 2026 22:00 UTC.
+App Check verification and actual Firebase AI Logic cloud generation succeeded in local development using a private, project-scoped debug token. The returned SDK inference source was `in_cloud`. The full game was then completed with generated narrative content. Unit tests verify gating, wrong answers, reset of an incorrect direction sequence, completion and save recovery.
+
+The test browser did **not** expose on-device AI: `ONLY_ON_DEVICE` returned `api-not-enabled`. On-device execution is implemented through the SDK but is not claimed as tested on this machine. `PREFER_ON_DEVICE` successfully used the cloud fallback. Supported desktop Chrome with an available model is required to test the local inference route.
+
+This repository contains no project configuration, API credentials or App Check debug token. The hosted personal preview is private; use the source instructions below for judging. A production App Check provider has not been provisioned for a public hosted AI endpoint.
+
+## Run and test
+
+Requires Node.js 20+ and Python 3 (or another static web server).
+
+```sh
+npm ci
+npm run build
+npm test
+python3 -m http.server 8080 --directory dist
+```
+
+Open `http://localhost:8080/`. The handcrafted chapter is playable immediately and needs no account. Use the EN button for the English UI.
+
+For actual AI generation, follow [TESTING.md](TESTING.md). Reviewers must use an authorized Firebase project of their own; no production credentials are published or embedded in the submission.
+
+## Firebase implementation
+
+`src/firebase.js` initializes Firebase App Check and creates a model with `InferenceMode.PREFER_ON_DEVICE` when cloud fallback is selected, or `ONLY_ON_DEVICE` when local-only is selected. Both local and cloud paths use a matching schema for JSON output. `initializeDeviceModel()` runs on a user interaction; `generateContent()` creates the story. The actual SDK `inferenceSource` is shown in the UI. App Check debug credentials are accepted by the app only when served from localhost or 127.0.0.1, held in memory and never persisted.
+
+Only the three entered labels and the story prompt are sent when cloud fallback is permitted. No room photographs, account records or saved game history are uploaded. Choosing local-only prevents cloud inference; an unavailable local model produces an error and preserves the previous game.
+
+## Design decision
+
+Generated stories should not create unsolvable games. A small authored puzzle graph controls mechanical progression while AI personalizes the narrative. This limits the current prototype to one chapter, but gives a complete beginning-to-ending experience and a stable foundation for additional puzzle graphs.
 
 ## Walkthrough (spoilers)
-Turn on lamp, rotate mirror to 90°, inspect book (417), open drawer with 417, follow brass leaf directions N E W to open garden.
 
-## Sources
-https://firebase.google.com/docs/ai-logic/hybrid/web/get-started
-https://firebase.google.com/docs/ai-logic/hybrid/web/configuration-options
-https://firebase.google.com/docs/ai-logic/hybrid/web/generate-structured-output
+Turn on the lamp. Rotate the mirror to 90°. Inspect the book: 417. Open the drawer with 417. Follow the brass leaf: N, E, W.
+
+## Tools and attribution
+
+Built with AI coding assistance. The interface, illustration, game logic and Firebase adapter were created during the competition period. Dependencies are listed in package-lock.json. The artwork is SVG source rather than third-party imagery. Fonts are optional Google Fonts with system fallbacks; the game remains usable if fonts cannot load.
+
+Official documentation used:
+- https://firebase.google.com/docs/ai-logic/hybrid/web/get-started
+- https://firebase.google.com/docs/ai-logic/hybrid/web/configuration-options
+- https://firebase.google.com/docs/ai-logic/hybrid/web/generate-structured-output
+- https://firebase.google.com/docs/app-check/web/recaptcha-enterprise-provider
+- https://firebase.google.com/docs/app-check/web-debug-provider
